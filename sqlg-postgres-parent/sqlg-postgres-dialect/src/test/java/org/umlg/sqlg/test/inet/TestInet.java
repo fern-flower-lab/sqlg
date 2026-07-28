@@ -18,6 +18,25 @@ import java.util.List;
 public class TestInet extends BaseTest {
 
     @Test
+    public void testPostgresqlDropsForwardSlash32() {
+        Schema publicSchema = this.sqlgGraph.getTopology().getPublicSchema();
+        publicSchema.ensureVertexLabelExist("InetTest", new HashMap<>() {{
+            put("name", PropertyDefinition.of(PropertyType.STRING));
+            put("ip", PropertyDefinition.of(PropertyType.PGINET));
+        }});
+        this.sqlgGraph.tx().commit();
+        LinkedHashMap<String, Object> properties = new LinkedHashMap<>();
+        properties.put("name", "a");
+        PGinet pGinet = new PGinet("10.10.90.34/32");
+        properties.put("ip", pGinet);
+        Vertex v1 = this.sqlgGraph.addVertex("InetTest", properties);
+        this.sqlgGraph.tx().commit();
+        Vertex _v1 = this.sqlgGraph.traversal().V(v1).next();
+        Assert.assertEquals("10.10.90.34", _v1.<PGinet>value("ip").getValue());
+
+    }
+
+    @Test
     public void testInetWithLinkedHashMap() {
         Schema publicSchema = this.sqlgGraph.getTopology().getPublicSchema();
         publicSchema.ensureVertexLabelExist("InetTest", new HashMap<>() {{
