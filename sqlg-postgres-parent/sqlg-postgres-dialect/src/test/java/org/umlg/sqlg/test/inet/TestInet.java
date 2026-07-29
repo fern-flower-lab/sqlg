@@ -296,6 +296,58 @@ public class TestInet extends BaseTest {
     }
 
     @Test
+    public void testAddToLastOctet() {
+        PGinet pGinet = new PGinet("10.10.90.34");
+        Assert.assertEquals("10.10.90.44", pGinet.addToLastOctet(10).getValue());
+        Assert.assertEquals("10.10.90.34", pGinet.getValue());
+
+        PGinet pGinetWithCidr = new PGinet("10.10.90.34/24");
+        Assert.assertEquals("10.10.90.44/24", pGinetWithCidr.addToLastOctet(10).getValue());
+
+        Assert.assertEquals("10.10.90.255", new PGinet("10.10.90.250").addToLastOctet(5).getValue());
+
+        try {
+            new PGinet("10.10.90.250").addToLastOctet(6);
+            Assert.fail("Expected an exception");
+        } catch (IllegalArgumentException e) {
+            //noop
+        }
+
+        try {
+            new PGinet("2345:0425:2CA1:0000:0000:0567:5673:23b5").addToLastOctet(1);
+            Assert.fail("Expected an exception");
+        } catch (IllegalStateException e) {
+            //noop
+        }
+    }
+
+    @Test
+    public void testSubtractFromLastOctet() {
+        PGinet pGinet = new PGinet("10.10.90.34");
+        Assert.assertEquals("10.10.90.24", pGinet.subtractFromLastOctet(10).getValue());
+        Assert.assertEquals("10.10.90.34", pGinet.getValue());
+
+        PGinet pGinetWithCidr = new PGinet("10.10.90.34/24");
+        Assert.assertEquals("10.10.90.24/24", pGinetWithCidr.subtractFromLastOctet(10).getValue());
+
+        Assert.assertEquals("10.10.90.0", new PGinet("10.10.90.5").subtractFromLastOctet(5).getValue());
+
+        try {
+            new PGinet("10.10.90.5").subtractFromLastOctet(6);
+            Assert.fail("Expected an exception");
+        } catch (IllegalArgumentException e) {
+            //noop
+        }
+
+        try {
+            new PGinet("2345:0425:2CA1:0000:0000:0567:5673:23b5").subtractFromLastOctet(1);
+            Assert.fail("Expected an exception");
+        } catch (IllegalStateException e) {
+            //noop
+        }
+    }
+
+    @Test
     public void testInetArrayStreamingBatchMode() {
         Schema publicSchema = this.sqlgGraph.getTopology().getPublicSchema();
         publicSchema.ensureVertexLabelExist("InetTest", new HashMap<>() {{
