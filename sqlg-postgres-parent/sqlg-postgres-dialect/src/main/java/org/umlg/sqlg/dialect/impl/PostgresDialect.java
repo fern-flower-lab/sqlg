@@ -533,6 +533,15 @@ public class PostgresDialect extends BaseSqlDialect implements SqlBulkDialect {
                     sql.append("null::JSONB");
                 }
                 break;
+            case PGINET_ORDINAL:
+                if (value != null) {
+                    sql.append("'");
+                    sql.append(escapeQuotes(value));
+                    sql.append("'::INET");
+                } else {
+                    sql.append("null::INET");
+                }
+                break;
             case boolean_ARRAY_ORDINAL:
                 if (value != null) {
                     sql.append("'{");
@@ -829,6 +838,24 @@ public class PostgresDialect extends BaseSqlDialect implements SqlBulkDialect {
                     sql.append("]");
                 } else {
                     sql.append("null");
+                }
+                break;
+            case PGINET_ARRAY_ORDINAL:
+                if (value != null) {
+                    sql.append("ARRAY[");
+                    PGinet[] pginetArray = (PGinet[]) value;
+                    int countStringArray = 1;
+                    for (PGinet pginet : pginetArray) {
+                        sql.append("'");
+                        sql.append(pginet.getValue());
+                        sql.append("'::INET");
+                        if (countStringArray++ < pginetArray.length) {
+                            sql.append(",");
+                        }
+                    }
+                    sql.append("]");
+                } else {
+                    sql.append("null::INET");
                 }
                 break;
             case ZONEDDATETIME_ARRAY_ORDINAL:

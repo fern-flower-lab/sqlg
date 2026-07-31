@@ -207,13 +207,25 @@ public class TestInet extends BaseTest {
             Assert.fail("Expected an exception");
         } catch (Exception e) {
             //noop
+            this.sqlgGraph.tx().rollback();
         }
         try {
             Vertex v1 = this.sqlgGraph.addVertex(T.label, "InetTest", "name", "a", "ip", new PGinet("1.300.1.1"));
             Assert.fail("Expected an exception");
         } catch (Exception e) {
             //noop
+            this.sqlgGraph.tx().rollback();
         }
+
+        ips = this.sqlgGraph.traversal().V().hasLabel("InetTest").has("ip", new PGinet("1.1.1.1")).toList();
+        this.sqlgGraph.tx().normalBatchModeOn();
+        for (Vertex ip : ips) {
+            ip.property("ip", new PGinet("1.1.1.2"));
+        }
+        this.sqlgGraph.tx().commit();
+        Assert.assertEquals(100, ips.size());
+        ips = this.sqlgGraph.traversal().V().hasLabel("InetTest").has("ip", new PGinet("1.1.1.2")).toList();
+        Assert.assertEquals(100, ips.size());
     }
 
     @Test
@@ -257,6 +269,21 @@ public class TestInet extends BaseTest {
         } catch (Exception e) {
             //noop
             Assert.assertTrue(e.getMessage().contains("invalid input syntax for type inet"));
+            sqlgGraph.tx().rollback();
+        }
+
+        ips = this.sqlgGraph.traversal().V().hasLabel("InetTest").toList();
+        this.sqlgGraph.tx().normalBatchModeOn();
+        for (Vertex ip : ips) {
+            ip.property("ip", new PGinet[] {new PGinet("2.2.2.2"), new PGinet("3.3.3.3")});
+        }
+        sqlgGraph.tx().commit();
+        ips = this.sqlgGraph.traversal().V().hasLabel("InetTest").toList();
+        for (Vertex ip : ips) {
+            PGinet[] pGinets = ip.value("ip");
+            Assert.assertEquals(2, pGinets.length);
+            Assert.assertEquals("2.2.2.2", pGinets[0].toString());
+            Assert.assertEquals("3.3.3.3", pGinets[1].toString());
         }
     }
 
@@ -361,7 +388,7 @@ public class TestInet extends BaseTest {
             this.sqlgGraph.streamVertex(
                     T.label, "InetTest",
                     "name", "a",
-                    "ips", new PGinet[] {new PGinet("1.1.1.1"), new PGinet("1.1.1.2")}
+                    "ips", new PGinet[]{new PGinet("1.1.1.1"), new PGinet("1.1.1.2")}
             );
         }
         this.sqlgGraph.tx().commit();
